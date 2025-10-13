@@ -60,7 +60,7 @@ pipeline {
         stage('Run with MySQL (Docker Compose)') {
             steps {
                 echo "🚀 Starting app and MySQL using docker-compose..."
-                sh 'docker-compose down || true' // stop previous containers if any
+                sh 'docker-compose down -v --remove-orphans || true' // stop previous containers if any
                 sh 'docker-compose up -d --build'
                 sh 'docker ps'
             }
