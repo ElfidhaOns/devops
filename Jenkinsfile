@@ -21,8 +21,12 @@ pipeline {
         stage('Start MySQL') {
             steps {
                 echo "🚀 Starting MySQL using Docker Compose..."
-                sh 'docker-compose down -v --remove-orphans || true' // stop previous containers if any
-                sh 'docker-compose up -d mysql-db'
+                // Stop old containers and remove volumes/orphans
+                sh 'docker-compose down -v --remove-orphans || true'
+                // Start only MySQL service
+                sh 'docker-compose up -d mysql'
+                // Wait a few seconds to let MySQL initialize
+                sh 'sleep 15'
                 sh 'docker ps'
             }
         }
@@ -30,8 +34,8 @@ pipeline {
         stage('Build & Unit Tests') {
             steps {
                 echo "🏗️ Building project and running unit tests..."
-                sh 'mvn clean'
-                sh 'mvn test'
+                // Tests will now connect to MySQL running in Docker
+                sh 'mvn clean test'
             }
         }
 
@@ -65,9 +69,10 @@ pipeline {
             }
         }
 
-        stage('Run with MySQL (Docker Compose)') {
+        stage('Run Application') {
             steps {
                 echo "🚀 Running app and MySQL using Docker Compose..."
+                // Start all services, including the app
                 sh 'docker-compose up -d --build'
                 sh 'docker ps'
             }
