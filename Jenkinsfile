@@ -18,6 +18,15 @@ pipeline {
             }
         }
 
+        stage('Start MySQL') {
+            steps {
+                echo "🚀 Starting MySQL using Docker Compose..."
+                sh 'docker-compose down -v --remove-orphans || true' // stop previous containers if any
+                sh 'docker-compose up -d mysql-db'
+                sh 'docker ps'
+            }
+        }
+
         stage('Build & Unit Tests') {
             steps {
                 echo "🏗️ Building project and running unit tests..."
@@ -42,7 +51,6 @@ pipeline {
             }
         }
 
-
         stage('Package Application') {
             steps {
                 echo "📦 Packaging application (.jar)..."
@@ -59,8 +67,7 @@ pipeline {
 
         stage('Run with MySQL (Docker Compose)') {
             steps {
-                echo "🚀 Starting app and MySQL using docker-compose..."
-                sh 'docker-compose down -v --remove-orphans || true' // stop previous containers if any
+                echo "🚀 Running app and MySQL using Docker Compose..."
                 sh 'docker-compose up -d --build'
                 sh 'docker ps'
             }
