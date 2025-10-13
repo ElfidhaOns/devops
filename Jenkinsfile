@@ -30,14 +30,18 @@ pipeline {
             steps {
                 echo "🔍 Running SonarQube analysis..."
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
-                    sh '''
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=devops-project \
-                        -Dsonar.host.url=http://localhost:9000
-                    '''
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            mvn sonar:sonar \
+                            -Dsonar.projectKey=student-management \
+                            -Dsonar.host.url=http://localhost:9000 \
+                            -Dsonar.login=$SONAR_TOKEN
+                        '''
+                    }
                 }
             }
         }
+
 
         stage('Package Application') {
             steps {
