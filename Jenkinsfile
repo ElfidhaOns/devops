@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven' // Must match the Maven installation name in Jenkins
+        maven 'Maven'
     }
 
     environment {
-        SONARQUBE_ENV = "sonarqube" // Must match the SonarQube server name in Jenkins
+        SONARQUBE_ENV = "sonarqube"
     }
 
     stages {
@@ -22,7 +22,7 @@ pipeline {
             steps {
                 echo "🏗️ Building project and running unit tests..."
                 sh 'mvn clean'
-                sh 'mvn test'   
+                sh 'mvn test'
             }
         }
 
@@ -46,17 +46,33 @@ pipeline {
             }
         }
 
+        stage('Build Docker Image') {
+            steps {
+                echo "🐳 Building Docker image for Spring Boot app..."
+                sh 'docker build -t student-app .'
+            }
+        }
+
+        stage('Run with MySQL (Docker Compose)') {
+            steps {
+                echo "🚀 Starting app and MySQL using docker-compose..."
+                sh 'docker-compose down || true' // stop previous containers if any
+                sh 'docker-compose up -d --build'
+                sh 'docker ps'
+            }
+        }
+
     }
 
     post {
         success {
-            echo "✅ CI completed successfully! Artifact is in target/."
+            echo "✅ CI completed successfully! Application and MySQL are running in Docker."
         }
         failure {
             echo "❌ CI failed. Check Jenkins logs for details."
         }
         always {
-            cleanWs() // Clean workspace after each build
+            cleanWs()
         }
     }
 }
