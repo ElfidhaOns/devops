@@ -68,7 +68,7 @@ pipeline {
             steps {
                 echo "📤 Transferring image to Minikube Docker..."
                 sh '''
-                    minikube start
+                    minikube start --driver=docker --disk-size=50g
                     eval $(minikube docker-env)
                     docker build -t student-app:latest .
                 '''
