@@ -68,6 +68,7 @@ pipeline {
             steps {
                 echo "📤 Transferring image to Minikube Docker..."
                 sh '''
+                    minikube start
                     eval $(minikube docker-env)
                     docker build -t student-app:latest .
                 '''
