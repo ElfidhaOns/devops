@@ -21,12 +21,8 @@ pipeline {
         stage('Start MySQL') {
             steps {
                 echo "🚀 Starting MySQL using Docker Compose..."
-                // Stop old containers and remove volumes/orphans
                 sh 'docker-compose down -v --remove-orphans || true'
-                // Start only MySQL service
                 sh 'docker-compose up -d mysql'
-                // Wait a few seconds to let MySQL initialize
-                sh 'sleep 15'
                 sh 'docker ps'
             }
         }
@@ -34,7 +30,6 @@ pipeline {
         stage('Build & Unit Tests') {
             steps {
                 echo "🏗️ Building project and running unit tests..."
-                // Tests will now connect to MySQL running in Docker
                 sh 'mvn clean test'
             }
         }
@@ -65,16 +60,28 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "🐳 Building Docker image for Spring Boot app..."
-                sh 'docker build -t student-app .'
+                sh 'docker build -t student-app:latest .'
             }
         }
 
-        stage('Run Application') {
+        stage('Push Docker Image to Local Minikube') {
             steps {
-                echo "🚀 Running app and MySQL using Docker Compose..."
-                // Start all services, including the app
-                sh 'docker-compose up -d --build'
-                sh 'docker ps'
+                echo "📤 Transferring image to Minikube Docker..."
+                sh '''
+                    eval $(minikube docker-env)
+                    docker build -t student-app:latest .
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes (Minikube)') {
+            steps {
+                echo "⚓ Deploying application to Kubernetes..."
+                sh '''
+                    kubectl apply -f k8s/mysql-deployment.yaml
+                    kubectl apply -f k8s/app-deployment.yaml
+                    kubectl rollout status deployment/student-app
+                '''
             }
         }
 
@@ -82,10 +89,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ CI completed successfully! Application and MySQL are running in Docker."
+            echo "✅ CI/CD pipeline completed successfully! Spring Boot app is deployed to Kubernetes 🚀"
         }
         failure {
-            echo "❌ CI failed. Check Jenkins logs for details."
+            echo "❌ CI/CD pipeline failed. Check logs for errors."
         }
         always {
             cleanWs()
