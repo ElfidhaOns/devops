@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        docker { image 'maven:3.9.5-eclipse-temurin-17' }
-    }
+    agent any
 
     tools {
         maven 'Maven'
@@ -62,7 +60,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "🐳 Building Docker image for Spring Boot app..."
-                sh 'docker build -t student-app:latest .'
+	        timeout(time: 30, unit: 'MINUTES') {
+                    sh 'docker build -t student-app:latest .'
+		}
             }
         }
 
