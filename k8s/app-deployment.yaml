@@ -1,42 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql
+  name: student-app        # <-- must match pipeline kubectl rollout status
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mysql
+      app: student-app
   template:
     metadata:
       labels:
-        app: mysql
+        app: student-app
     spec:
       containers:
-        - name: mysql
-          image: mysql:8
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: root
-            - name: MYSQL_DATABASE
-              value: studentdb
+        - name: student-app
+          image: student-app:latest   # <-- must match Docker build in pipeline
           ports:
-            - containerPort: 3306
-          volumeMounts:
-            - name: mysql-storage
-              mountPath: /var/lib/mysql
-      volumes:
-        - name: mysql-storage
-          emptyDir: {}
+            - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
+  name: student-app-service
 spec:
   selector:
-    app: mysql
+    app: student-app
   ports:
-    - port: 3306
-      targetPort: 3306
+    - port: 8080
+      targetPort: 8080
   type: ClusterIP

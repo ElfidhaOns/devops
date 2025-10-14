@@ -81,8 +81,8 @@ pipeline {
             steps {
                 echo "⚓ Deploying application to Kubernetes..."
                 sh '''
-                    kubectl apply -f k8s/mysql-deployment.yaml
-                    kubectl apply -f k8s/app-deployment.yaml
+ 		    kubectl apply -f k8s/mysql-deployment.yaml
+            	    kubectl apply -f k8s/app-deployment.yaml
                     kubectl rollout status deployment/student-app
                 '''
             }
