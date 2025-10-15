@@ -22,11 +22,7 @@ pipeline {
             steps {
                 echo "🛢️ Starting MySQL container for tests..."
                 sh '''
-                    docker run -d --name mysql-test \
-                        -e MYSQL_ROOT_PASSWORD=root \
-                        -e MYSQL_DATABASE=studentdb \
-                        -p 3306:3306 \
-                        mysql:8
+                    docker-compose up -d
                     echo "Waiting 20s for MySQL to initialize..."
                     sleep 20
                 '''
@@ -100,7 +96,7 @@ pipeline {
     post {
         always {
             echo "🧹 Cleaning up MySQL test container..."
-            sh 'docker stop mysql-test || true && docker rm mysql-test || true'
+            sh 'docker-compose down || true'
             cleanWs()
         }
         success {

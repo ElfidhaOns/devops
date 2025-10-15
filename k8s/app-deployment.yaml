@@ -12,7 +12,6 @@ spec:
       labels:
         app: student-app
     spec:
-      # Wait for MySQL to be ready before starting
       initContainers:
         - name: wait-for-mysql
           image: busybox
