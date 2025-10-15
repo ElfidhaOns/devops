@@ -18,15 +18,6 @@ pipeline {
             }
         }
 
-        stage('Start MySQL') {
-            steps {
-                echo "🚀 Starting MySQL using Docker Compose..."
-                sh 'docker-compose down -v --remove-orphans || true'
-                sh 'docker-compose up -d mysql'
-                sh 'docker ps'
-            }
-        }
-
         stage('Build & Unit Tests') {
             steps {
                 echo "🏗️ Building project and running unit tests..."
@@ -60,13 +51,13 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "🐳 Building Docker image for Spring Boot app..."
-	        timeout(time: 30, unit: 'MINUTES') {
+                timeout(time: 30, unit: 'MINUTES') {
                     sh 'docker build -t student-app:latest .'
-		}
+                }
             }
         }
 
-        stage('Push Docker Image to Local Minikube') {
+        stage('Push Docker Image to Minikube') {
             steps {
                 echo "📤 Transferring image to Minikube Docker..."
                 sh '''
@@ -81,8 +72,8 @@ pipeline {
             steps {
                 echo "⚓ Deploying application to Kubernetes..."
                 sh '''
- 		    kubectl apply -f k8s/mysql-deployment.yaml
-            	    kubectl apply -f k8s/app-deployment.yaml
+                    kubectl apply -f k8s/mysql-deployment.yaml
+                    kubectl apply -f k8s/app-deployment.yaml
                     kubectl rollout status deployment/student-app
                 '''
             }
