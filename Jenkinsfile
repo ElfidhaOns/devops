@@ -64,7 +64,7 @@ pipeline {
                 echo "🚀 Starting Minikube (if not already running) and configuring Docker..."
                 sh '''
                     if ! minikube status &>/dev/null; then
-                        minikube start --driver=docker --cpus=2 --memory=8g --disk-size=50g
+                        minikube start --driver=docker --disk-size=50g
                     else
                         echo "Minikube already running"
                     fi
