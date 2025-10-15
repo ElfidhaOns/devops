@@ -48,23 +48,24 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Start Minikube & Prepare Docker') {
             steps {
-                echo "🐳 Building Docker image for Spring Boot app..."
-                timeout(time: 30, unit: 'MINUTES') {
-                    sh 'docker build -t student-app:latest .'
-                }
+                echo "🚀 Starting Minikube (if not already running) and configuring Docker..."
+                sh '''
+                    if ! minikube status &>/dev/null; then
+                        minikube start --driver=docker --cpus=2 --memory=8g --disk-size=50g
+                    else
+                        echo "Minikube already running"
+                    fi
+                    eval $(minikube docker-env)
+                '''
             }
         }
 
-        stage('Push Docker Image to Minikube') {
+        stage('Build Docker Image for Minikube') {
             steps {
-                echo "📤 Transferring image to Minikube Docker..."
-                sh '''
-                    minikube start --driver=docker --disk-size=50g
-                    eval $(minikube docker-env)
-                    docker build -t student-app:latest .
-                '''
+                echo "🐳 Building Docker image for Spring Boot app in Minikube Docker..."
+                sh 'docker build -t student-app:latest .'
             }
         }
 
