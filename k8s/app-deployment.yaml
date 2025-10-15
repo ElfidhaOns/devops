@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: student-app        # <-- must match pipeline kubectl rollout status
+  name: student-app        # Must match pipeline kubectl rollout status
 spec:
   replicas: 1
   selector:
@@ -12,9 +12,14 @@ spec:
       labels:
         app: student-app
     spec:
+      # Init container waits for MySQL to be ready
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command: ['sh', '-c', 'until nc -z mysql-service 3306; do echo waiting for mysql; sleep 2; done']
       containers:
         - name: student-app
-          image: student-app:latest   # <-- must match Docker build in pipeline
+          image: student-app:latest   # Must match Docker build in pipeline
           ports:
             - containerPort: 8080
 ---
