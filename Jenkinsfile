@@ -18,6 +18,21 @@ pipeline {
             }
         }
 
+        stage('Start MySQL for Tests') {
+            steps {
+                echo "🛢️ Starting MySQL container for tests..."
+                sh '''
+                    docker run -d --name mysql-test \
+                        -e MYSQL_ROOT_PASSWORD=root \
+                        -e MYSQL_DATABASE=studentdb \
+                        -p 3306:3306 \
+                        mysql:8
+                    echo "Waiting 20s for MySQL to initialize..."
+                    sleep 20
+                '''
+            }
+        }
+
         stage('Build & Unit Tests') {
             steps {
                 echo "🏗️ Building project and running unit tests..."
@@ -83,14 +98,16 @@ pipeline {
     }
 
     post {
+        always {
+            echo "🧹 Cleaning up MySQL test container..."
+            sh 'docker stop mysql-test || true && docker rm mysql-test || true'
+            cleanWs()
+        }
         success {
             echo "✅ CI/CD pipeline completed successfully! Spring Boot app is deployed to Kubernetes 🚀"
         }
         failure {
             echo "❌ CI/CD pipeline failed. Check logs for errors."
-        }
-        always {
-            cleanWs()
         }
     }
 }
