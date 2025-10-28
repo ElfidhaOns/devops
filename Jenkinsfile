@@ -7,6 +7,8 @@ pipeline {
 
     environment {
         SONARQUBE_ENV = "sonarqube"
+        DOCKER_HUB_REPO = "onsfidha/devops"
+        IMAGE_TAG = "latest"
     }
 
     stages {
@@ -59,35 +61,29 @@ pipeline {
             }
         }
 
-        stage('Start Minikube & Prepare Docker') {
+        stage('Build Docker Image') {
             steps {
-                echo "🚀 Starting Minikube (if not already running) and configuring Docker..."
-                sh '''
-                    if ! minikube status &>/dev/null; then
-                        minikube start --driver=docker --disk-size=50g
-                    else
-                        echo "Minikube already running"
-                    fi
-                    eval $(minikube docker-env)
-                '''
+                echo "🐳 Building Docker image..."
+                withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        docker login -u $DOCKER_USER -p $DOCKER_PASS
+                        docker build -t $DOCKER_HUB_REPO:$IMAGE_TAG .
+                        docker push $DOCKER_HUB_REPO:$IMAGE_TAG
+                    '''
+                }
             }
         }
 
-        stage('Build Docker Image for Minikube') {
+        stage('Deploy to Kubernetes') {
             steps {
-                echo "🐳 Building Docker image for Spring Boot app in Minikube Docker..."
-                sh 'docker build -t student-app:latest .'
-            }
-        }
-
-        stage('Deploy to Kubernetes (Minikube)') {
-            steps {
-                echo "⚓ Deploying application to Kubernetes..."
-                sh '''
-                    kubectl apply -f k8s/mysql-deployment.yaml
-                    kubectl apply -f k8s/app-deployment.yaml
-                    kubectl rollout status deployment/student-app
-                '''
+                echo "⚓ Deploying application to remote Kubernetes cluster..."
+                withKubeConfig(credentialsId: 'k8s-credentials') {
+                    sh '''
+                        kubectl apply -f k8s/mysql-deployment.yaml
+                        kubectl apply -f k8s/app-deployment.yaml
+                        kubectl rollout status deployment/student-app
+                    '''
+                }
             }
         }
 
