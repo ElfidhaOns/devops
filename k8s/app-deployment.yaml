@@ -18,7 +18,7 @@ spec:
           command: ['sh', '-c', 'until nc -z mysql-service 3306; do echo waiting for mysql; sleep 2; done']
       containers:
         - name: student-app
-          image: student-app:latest
+          image: onsfidha/devops:latest
           ports:
             - containerPort: 8080
 ---
