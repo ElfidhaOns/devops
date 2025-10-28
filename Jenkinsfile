@@ -8,7 +8,6 @@ pipeline {
     environment {
         SONARQUBE_ENV = "sonarqube"
         DOCKER_IMAGE = "onsfidha/devops:latest"
-        KUBECONFIG = '/var/jenkins_home/.kube/config'
     }
 
     stages {
@@ -77,11 +76,12 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 echo "⚓ Deploying to remote Kubernetes cluster..."
-                    sh '''
-                        kubectl apply -f k8s/mysql-deployment.yaml
-                        kubectl apply -f k8s/app-deployment.yaml
-                        kubectl rollout status deployment/student-app
-                    '''
+                    withKubeConfig([credentialsId: 'kubernetes-config']) {
+                        sh '''
+                            kubectl apply -f k8s/mysql-deployment.yaml
+                            kubectl apply -f k8s/app-deployment.yaml
+                            kubectl rollout status deployment/student-app
+                      }  '''
             }
         }
 
