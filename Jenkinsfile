@@ -44,9 +44,9 @@ pipeline {
                     withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                         sh '''
                             mvn sonar:sonar \
-                            -Dsonar.projectKey=student-management \
-                            -Dsonar.host.url=http://localhost:9000 \
-                            -Dsonar.login=$SONAR_TOKEN
+                                -Dsonar.projectKey=student-management \
+                                -Dsonar.host.url=http://localhost:9000 \
+                                -Dsonar.login=$SONAR_TOKEN
                         '''
                     }
                 }
@@ -76,12 +76,13 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 echo "⚓ Deploying to remote Kubernetes cluster..."
-                    withKubeConfig([credentialsId: 'kubernetes-config']) {
-                        sh '''
-                            kubectl apply -f k8s/mysql-deployment.yaml
-                            kubectl apply -f k8s/app-deployment.yaml
-                            kubectl rollout status deployment/student-app
-                      }  '''
+                withKubeConfig([credentialsId: 'kubernetes-config']) {
+                    sh '''
+                        kubectl apply -f k8s/mysql-deployment.yaml
+                        kubectl apply -f k8s/app-deployment.yaml
+                        kubectl rollout status deployment/student-app
+                    '''
+                }
             }
         }
 
