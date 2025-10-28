@@ -78,7 +78,7 @@ pipeline {
                 echo "⚓ Deploying to remote Kubernetes cluster..."
                 withCredentials([file(credentialsId: 'k8s-credentials', variable: 'KUBECONFIG_FILE')]) {
                     sh '''
-                        export KUBECONFIG=/var/lib/jenkins/.kube/config
+                        export KUBECONFIG=$KUBECONFIG_FILE
                         kubectl apply -f k8s/mysql-deployment.yaml
                         kubectl apply -f k8s/app-deployment.yaml
                         kubectl rollout status deployment/student-app
