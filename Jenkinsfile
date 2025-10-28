@@ -19,6 +19,17 @@ pipeline {
             }
         }
 
+        stage('Start MySQL for Tests') {
+            steps {
+                echo "🛢️ Starting MySQL container for tests..."
+                sh '''
+                    docker-compose up -d
+                    echo "Waiting 20s for MySQL to initialize..."
+                    sleep 20
+                '''
+            }
+        }
+
         stage('Build & Unit Tests') {
             steps {
                 echo "🏗️ Building project and running unit tests..."
@@ -62,7 +73,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to Remote Kubernetes') {
+        stage('Deploy to Kubernetes') {
             steps {
                 echo "⚓ Deploying to remote Kubernetes cluster..."
                 withCredentials([file(credentialsId: 'k8s-credentials', variable: 'KUBECONFIG_FILE')]) {
@@ -80,11 +91,12 @@ pipeline {
 
     post {
         always {
-            echo "🧹 Cleaning workspace..."
+            echo "🧹 Cleaning up MySQL test container..."
+            sh 'docker-compose down || true'
             cleanWs()
         }
         success {
-            echo "✅ CI/CD pipeline completed successfully! App deployed to remote Kubernetes 🚀"
+            echo "✅ CI/CD pipeline completed successfully! App deployed to Kubernetes 🚀"
         }
         failure {
             echo "❌ CI/CD pipeline failed. Check logs for errors."
