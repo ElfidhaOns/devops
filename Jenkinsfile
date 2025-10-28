@@ -7,8 +7,7 @@ pipeline {
 
     environment {
         SONARQUBE_ENV = "sonarqube"
-        DOCKER_HUB_REPO = "onsfidha/devops"
-        IMAGE_TAG = "latest"
+        DOCKER_IMAGE = "onsfidha/devops:latest"
     }
 
     stages {
@@ -61,14 +60,14 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Login & Build Image') {
             steps {
-                echo "🐳 Building Docker image..."
+                echo "🐳 Logging into Docker Hub and building image..."
                 withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                        docker login -u $DOCKER_USER -p $DOCKER_PASS
-                        docker build -t $DOCKER_HUB_REPO:$IMAGE_TAG .
-                        docker push $DOCKER_HUB_REPO:$IMAGE_TAG
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker build -t $DOCKER_IMAGE .
+                        docker push $DOCKER_IMAGE
                     '''
                 }
             }
@@ -76,9 +75,10 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                echo "⚓ Deploying application to remote Kubernetes cluster..."
-                withKubeConfig(credentialsId: 'k8s-credentials') {
+                echo "⚓ Deploying to Kubernetes..."
+                withCredentials([file(credentialsId: 'k8s-credentials', variable: 'KUBECONFIG_FILE')]) {
                     sh '''
+                        export KUBECONFIG=$KUBECONFIG_FILE
                         kubectl apply -f k8s/mysql-deployment.yaml
                         kubectl apply -f k8s/app-deployment.yaml
                         kubectl rollout status deployment/student-app
@@ -96,7 +96,7 @@ pipeline {
             cleanWs()
         }
         success {
-            echo "✅ CI/CD pipeline completed successfully! Spring Boot app is deployed to Kubernetes 🚀"
+            echo "✅ CI/CD pipeline completed successfully! App deployed to Kubernetes 🚀"
         }
         failure {
             echo "❌ CI/CD pipeline failed. Check logs for errors."
