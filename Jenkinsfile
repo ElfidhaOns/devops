@@ -73,12 +73,11 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy to Kubernetes (Minikube)') {
             steps {
-                echo "⚓ Deploying to Kubernetes..."
-                withCredentials([file(credentialsId: 'k8s-credentials', variable: 'KUBECONFIG_FILE')]) {
+                echo "⚓ Deploying to Kubernetes using local Minikube..."
+                withEnv(["KUBECONFIG=/home/noussa/.minikube/config"]) {
                     sh '''
-                        export KUBECONFIG=$KUBECONFIG_FILE
                         kubectl apply -f k8s/mysql-deployment.yaml
                         kubectl apply -f k8s/app-deployment.yaml
                         kubectl rollout status deployment/student-app
